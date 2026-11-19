@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isla Azura — Puerto Azura</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #10131a; font-family: Arial, Helvetica, sans-serif; }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  #hud { position: fixed; inset: 0; pointer-events: none; color: #fff; display: none; }
+  .panel { background: rgba(12, 16, 24, 0.78); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 10px 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.45); }
+  /* Mission tracker, top left */
+  #mission { position: absolute; top: 14px; left: 14px; width: 340px; border-top: 4px solid #ffd233; }
+  #missionName { font-size: 12px; letter-spacing: 1px; color: #ffd233; font-weight: bold; }
+  #missionStage { display: inline-block; background: #ffd233; color: #111; font-weight: bold; font-size: 12px; padding: 2px 8px; border-radius: 4px; margin: 6px 0; }
+  #missionObjective { font-size: 22px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.1; }
+  #missionNext { font-size: 12px; color: #9fd4e8; margin-top: 6px; }
+  #policePanel { position: absolute; top: 170px; left: 14px; width: 300px; }
+  #policePanel h4 { margin: 0 0 4px; color: #ff5a5a; font-size: 12px; letter-spacing: 1px; }
+  #policeCount { float: right; color: #fff; }
+  .unit { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+  .unit-name { font-weight: bold; }
+  .unit-role { color: #ffb3b3; }
+  .unit-dist { color: #9fd4e8; }
+  #policeChatter { font-size: 11px; color: #c9d4de; margin-top: 6px; font-style: italic; }
+  /* Top right: clock, money, stars, rank */
+  #topRight { position: absolute; top: 14px; right: 14px; text-align: right; }
+  #clock { font-size: 15px; color: #e8eef4; }
+  #money { font-size: 34px; font-weight: 900; color: #5df0c0; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  #stars { font-size: 26px; letter-spacing: 4px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.7); }
+  #stars.hot { color: #ffd233; }
+  #airUnit { font-size: 12px; color: #ff8a5a; font-weight: bold; letter-spacing: 1px; }
+  #rankBox { margin-top: 8px; text-align: right; }
+  #rankName { font-size: 14px; font-weight: 900; color: #ffd233; }
+  #rankBarWrap { width: 190px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 4px 0 2px auto; overflow: hidden; }
+  #rankBar { height: 100%; background: #ffd233; width: 0%; }
+  #rankRp { font-size: 11px; color: #c9d4de; }
+  /* Weapons + crew, right middle */
+  #weapons { position: absolute; right: 14px; top: 220px; display: flex; gap: 6px; }
+  .weapon { width: 74px; background: rgba(12,16,24,0.78); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 6px; text-align: center; }
+  .weapon.active { border-color: #ffd233; box-shadow: 0 0 0 2px #ffd233; }
+  .wslot { font-size: 10px; color: #9fd4e8; }
+  .wname { font-size: 15px; font-weight: 900; }
+  .wammo { font-size: 11px; color: #c9d4de; }
+  #crew { position: absolute; right: 14px; top: 320px; width: 230px; }
+  .ability { display: flex; gap: 8px; align-items: center; background: rgba(12,16,24,0.78); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 7px 9px; margin-bottom: 6px; }
+  .ability.cooling { opacity: 0.45; }
+  .akey { background: #ffd233; color: #111; font-weight: 900; border-radius: 4px; padding: 3px 7px; font-size: 13px; }
+  .aname { font-size: 13px; font-weight: 900; }
+  .arole { font-size: 11px; color: #9fd4e8; }
+  /* Bottom left: district, minimap, vitals */
+  #bottomLeft { position: absolute; left: 14px; bottom: 14px; }
+  #districtName { font-size: 22px; font-weight: 900; color: #ffd233; text-shadow: 0 2px 6px rgba(0,0,0,0.7); }
+  #districtSub { font-size: 12px; color: #e8eef4; }
+  #districtBarWrap { width: 220px; height: 7px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 5px 0 8px; overflow: hidden; }
+  #districtBar { height: 100%; background: #5df0c0; width: 58%; }
+  #districtStanding { font-size: 12px; font-weight: bold; }
+  #minimap { width: 210px; height: 210px; border: 2px solid rgba(255,255,255,0.35); border-radius: 8px; background: #20262e; display: block; }
+  #vitals { margin-top: 8px; width: 220px; }
+  .vital { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: bold; margin-top: 4px; }
+  .vital .bar { flex: 1; height: 9px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; }
+  #healthBar { height: 100%; background: #57d977; }
+  #armourBar { height: 100%; background: #5b8fd9; }
+  /* Bottom centre: dialogue + hint */
+  #dialogue { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: 520px; background: rgba(12,16,24,0.85); border: 1px solid rgba(255,255,255,0.16); border-radius: 8px; padding: 10px 14px; display: none; gap: 10px; align-items: flex-start; }
+  #dialogueWho { color: #5df0c0; font-weight: 900; font-size: 13px; }
+  #dialogueLine { font-size: 14px; line-height: 1.35; }
+  #hint { position: absolute; left: 50%; bottom: 110px; transform: translateX(-50%); font-size: 12px; color: #dfe8f0; text-shadow: 0 1px 4px #000; background: rgba(0,0,0,0.45); padding: 4px 10px; border-radius: 5px; }
+  /* Bottom right: speed */
+  #speedBox { position: absolute; right: 16px; bottom: 16px; text-align: right; }
+  #speedNum { font-size: 56px; font-weight: 900; line-height: 0.9; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
+  #speedUnit { font-size: 13px; color: #c9d4de; }
+  #carName { font-size: 15px; font-weight: 900; color: #5df0c0; }
+  #carDamage { font-size: 12px; color: #ffd233; }
+  #radio { font-size: 12px; color: #c9d4de; margin-top: 4px; }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid rgba(255,255,255,0.85); border-radius: 50%; display: none; }
+  #crosshair:after { content: ''; position: absolute; left: 9px; top: 9px; width: 4px; height: 4px; background: #ff5a5a; border-radius: 50%; }
+  /* Screens */
+  .screen { position: fixed; inset: 0; display: none; z-index: 5; }
+  #screenTitle { background: linear-gradient(180deg, rgba(10,8,20,0.25) 0%, rgba(10,8,20,0.55) 60%, rgba(10,8,20,0.85) 100%); flex-direction: column; justify-content: flex-end; padding: 40px 56px; color: #fff; }
+  #screenTitle h1 { font-size: 92px; line-height: 0.9; margin: 0; font-weight: 900; background: linear-gradient(180deg, #fff6c9, #ffb347 55%, #ff5a7a); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 4px 24px rgba(0,0,0,0.35); }
+  #screenTitle h2 { font-size: 30px; letter-spacing: 8px; color: #5df0c0; margin: 6px 0 24px; }
+  .menu { display: flex; flex-direction: column; gap: 6px; width: 300px; }
+  .menu button { text-align: left; background: transparent; border: none; color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 1px; padding: 6px 12px; cursor: pointer; }
+  .menu button:hover, .menu button:focus { background: #ff5a3c; }
+  #titleSlots { position: absolute; right: 56px; bottom: 120px; width: 380px; display: flex; flex-direction: column; gap: 8px; }
+  .slot { background: rgba(12,16,24,0.8); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 10px 12px; }
+  .slot b { display: block; font-size: 14px; }
+  .slot span { font-size: 12px; color: #c9d4de; }
+  #titleFoot { margin-top: 26px; font-size: 13px; color: #dfe8f0; }
+  #screenPause { background: rgba(8, 10, 16, 0.88); flex-direction: column; padding: 24px 40px; color: #fff; overflow: auto; }
+  #screenPause h1 { font-size: 40px; margin: 0 0 4px; color: #ffd233; }
+  #pauseTabs { display: flex; gap: 6px; margin: 8px 0 16px; flex-wrap: wrap; }
+  .ptab { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: bold; cursor: pointer; }
+  .ptab.active { background: #ff5a3c; border-color: #ff5a3c; }
+  #pauseBody { display: flex; gap: 24px; align-items: flex-start; }
+  .statcol { width: 300px; }
+  .statcol.wide { width: 660px; }
+  .ring { width: 150px; height: 150px; border: 12px solid #ffd233; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .ring b { font-size: 30px; }
+  .ring span { font-size: 11px; letter-spacing: 2px; }
+  .prog { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 7px 0; }
+  .prog span { width: 130px; }
+  .prog i { display: block; height: 8px; background: #5df0c0; border-radius: 4px; }
+  .prog b { margin-left: auto; }
+  .career { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; }
+  .careerItem b { display: block; font-size: 22px; color: #5df0c0; }
+  .careerItem span { font-size: 11px; color: #c9d4de; }
+  #pauseMap { width: 100%; border: 2px solid rgba(255,255,255,0.25); border-radius: 8px; }
+  .maphint { font-size: 12px; color: #c9d4de; }
+  .storyRow { display: flex; flex-direction: column; gap: 2px; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; width: 640px; }
+  .storyRow b { font-size: 15px; }
+  .storyRow span { font-size: 13px; color: #c9d4de; }
+  .storyRow i { font-size: 12px; color: #ffd233; font-style: normal; }
+  .storyRow.done b { color: #5df0c0; }
+  .ratings { display: flex; gap: 8px; margin: 6px 0 14px; }
+  .rating { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; background: #3a3f47; }
+  .rating.g { background: #ffd233; color: #111; }
+  .rating.s { background: #c9d4de; color: #111; }
+  .rating.b { background: #cd7f32; color: #111; }
+  #screenOver { background: rgba(20, 4, 8, 0.72); flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+  #wastedTitle { font-size: 84px; font-weight: 900; color: #ff5a5a; letter-spacing: 4px; }
+  #wastedSub { font-size: 16px; color: #e8eef4; }
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Isla Azura: an original open-world crime game on the island of Isla Azura"></canvas>
+<p id="status" role="status" aria-live="polite"></p>
+
+<div id="hud">
+  <div id="mission" class="panel">
+    <div id="missionName">MISSION 1 · HOT WHEELS</div>
+    <span id="missionStage">STAGE 1/3</span>
+    <div id="missionObjective">Steal the Veloce GT</div>
+    <div id="missionNext">NEXT Lose the cops</div>
+  </div>
+  <div id="policePanel" class="panel">
+    <h4>AZPD RESPONSE <span id="policeCount">0 UNITS</span></h4>
+    <div id="policeList"></div>
+    <div id="policeChatter"></div>
+  </div>
+  <div id="topRight">
+    <div id="clock">17:40</div>
+    <div id="money">$2,450</div>
+    <div id="stars" class="stars">☆☆☆☆☆</div>
+    <div id="airUnit">AIR UNIT DEPLOYED</div>
+    <div id="rankBox">
+      <div id="rankName">RANK 1 · ROOKIE</div>
+      <div id="rankBarWrap"><div id="rankBar"></div></div>
+      <div id="rankRp">0 / 1,500 RP</div>
+    </div>
+  </div>
+  <div id="weapons"></div>
+  <div id="crew"></div>
+  <div id="bottomLeft">
+    <div id="districtName">OLD TOWN</div>
+    <div id="districtSub">Plaza and the cathedral</div>
+    <div id="districtBarWrap"><div id="districtBar"></div></div>
+    <div id="districtStanding">NEUTRAL · 58</div>
+    <canvas id="minimap" width="210" height="210"></canvas>
+    <div id="vitals">
+      <div class="vital">HEALTH <div class="bar"><div id="healthBar"></div></div><span id="healthNum">100</span></div>
+      <div class="vital">ARMOUR <div class="bar"><div id="armourBar"></div></div><span id="armourNum">0</span></div>
+    </div>
+  </div>
+  <div id="dialogue"><div><div id="dialogueWho">MARA</div><div id="dialogueLine"></div></div></div>
+  <div id="hint"></div>
+  <div id="speedBox"><div><span id="speedNum">0</span> <span id="speedUnit">KM/H</span></div><div id="carName"></div><div id="carDamage"></div><div id="radio"></div></div>
+  <div id="crosshair"></div>
+</div>
+
+<div id="screenTitle" class="screen">
+  <h1>ISLA AZURA</h1>
+  <h2>PUERTO AZURA</h2>
+  <div class="menu">
+    <button id="btnContinue">CONTINUE</button>
+    <button id="btnNew">NEW GAME</button>
+    <button id="btnLoad">LOAD GAME</button>
+    <button id="btnSettings">SETTINGS</button>
+  </div>
+  <div id="titleSlots"></div>
+  <div id="titleFoot">An original open-world crime story on an island that never existed · Keyboard &amp; mouse · Rio Vega, Mara, Leo and Nia against Don Salazar</div>
+</div>
+
+<div id="screenPause" class="screen">
+  <h1>PUERTO AZURA</h1>
+  <div id="pauseTabs"></div>
+  <div id="pauseBody"></div>
+  <p class="maphint">ESC resume · Q / E switch tab · click the map to set a waypoint</p>
+</div>
+
+<div id="screenOver" class="screen">
+  <div id="wastedTitle">WASTED</div>
+  <div id="wastedSub"></div>
+</div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
