@@ -34,14 +34,17 @@ export function buildCarMesh(model, opts) {
     g.add(w);
     wheels.push(w);
   }
+  // The light bar the siren blink drives: kept as a named mesh, not a
+  // child index, so the blink never lands on a wheel by mistake.
+  let bar = null;
   if (o.police) {
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, 0.5), new THREE.MeshBasicMaterial({ color: 0xff2222 }));
+    bar = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, 0.5), new THREE.MeshBasicMaterial({ color: 0xff2222 }));
     bar.position.set(0, 1.56, -0.25);
     g.add(bar);
     const barB = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.22, 0.5), new THREE.MeshBasicMaterial({ color: 0x2244ff }));
     barB.position.set(0.7, 1.56, -0.25);
     g.add(barB);
-    const door = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 1.6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    const door = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 1.6), new THREE.MeshBasicMaterial({ color: 0x1c2733 }));
     door.position.set(-1.06, 0.75, 0.1);
     g.add(door);
     const door2 = door.clone();
@@ -49,7 +52,7 @@ export function buildCarMesh(model, opts) {
     g.add(door2);
   }
   g.userData.wheels = wheels;
-  g.userData.bar = o.police ? g.children[5] : null;
+  g.userData.bar = bar;
   return g;
 }
 

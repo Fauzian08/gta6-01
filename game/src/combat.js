@@ -108,7 +108,7 @@ export class Combat {
 
   spawnEnemy(x, z, kind) {
     const g = new THREE.Group();
-    const gang = new THREE.MeshLambertMaterial({ color: kind === 'vulture' ? 0xa83232 : 0x5a4a7a });
+    const gang = new THREE.MeshLambertMaterial({ color: kind === 'vulture' ? 0xc23b2e : 0x5a4a7a });
     const skin = new THREE.MeshLambertMaterial({ color: 0xb07a52 });
     const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.34), gang);
     body.position.y = 1.05;

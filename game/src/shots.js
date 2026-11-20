@@ -31,52 +31,62 @@ function stageChase(g) {
   g.player.onFoot = false;
   // Rio in the orange Veloce GT, north up the beach avenue at 111 km/h.
   // The avenue is the street at x=240: beach and sea to the east, city west.
-  const car = g.enterCar('VELOCE GT', 240, 60, Math.PI);
+  // The car runs angled across its lane, so the chase camera sees its rear
+  // and the west flank the setting sun lights — the orange paint reads
+  // bright instead of sinking into shadow.
+  const car = g.enterCar('VELOCE GT', 240, 60, Math.PI + 0.5);
   car.speed = 31;
   car.damage = 62;
   g.car = car;
-  // The convoy car ahead, the mission target.
-  const convoy = g.spawnTargetCar('HARBOR VAN', 240, -40, Math.PI, 0x8a6b4f);
+  // The convoy car ahead, the mission target — close enough to read, and
+  // painted a hard red so it stands out from the traffic as the van to wreck.
+  const convoy = g.spawnTargetCar('HARBOR VAN', 239, 25, Math.PI, 0xb03a2e);
   convoy.speed = 24;
   g.missionTarget = convoy;
-  // AZPD on his tail: three interceptors and the air unit.
+  // AZPD on his tail: three interceptors flanking the car and the air unit.
   g.police.setStars(4);
   g.police.clearAll();
   const p1 = g.police.spawnCarNear(240, 78);
-  p1.x = 234; p1.z = 62; p1.heading = Math.PI; p1.speed = 29;
+  p1.x = 233; p1.z = 50; p1.heading = Math.PI + 0.15; p1.speed = 29;
   p1.mesh.position.set(p1.x, 0, p1.z);
   p1.mesh.rotation.y = p1.heading;
   const p2 = g.police.spawnCarNear(240, 78);
-  p2.x = 247; p2.z = 70; p2.heading = Math.PI; p2.speed = 27;
+  p2.x = 247; p2.z = 46; p2.heading = Math.PI - 0.15; p2.speed = 27;
   p2.mesh.position.set(p2.x, 0, p2.z);
   p2.mesh.rotation.y = p2.heading;
   const p3 = g.police.spawnCarNear(240, 78);
-  p3.x = 238; p3.z = 40; p3.heading = Math.PI; p3.speed = 25;
+  p3.x = 237; p3.z = 28; p3.heading = Math.PI; p3.speed = 25;
   p3.mesh.position.set(p3.x, 0, p3.z);
   p3.mesh.rotation.y = p3.heading;
-  g.police.spawnHeli(256, -5);
+  const heli = g.police.spawnHeli(258, -35);
+  heli.position.y = 36;
   // Traffic ahead on the same avenue, beachgoers on the sand.
   g.traffic.clear();
-  const roadCars = [[236, -8, 10], [244, -28, 8], [238, -58, 12], [242, 12, 9]];
+  const roadCars = [[236, -8, 10], [244, -28, 8], [238, -58, 12], [246, -18, 9]];
   for (const [tx, tz, ts] of roadCars) {
     const tc = g.traffic.addCar();
     tc.x = tx; tc.z = tz; tc.heading = Math.PI; tc.speed = ts;
     tc.mesh.position.set(tx, 0, tz);
     tc.mesh.rotation.y = Math.PI;
   }
-  for (let i = 0; i < 5; i += 1) g.traffic.addPed();
-  const beachPeds = [[306, -18], [312, 6], [300, 28], [316, -38]];
+  for (let i = 0; i < 9; i += 1) g.traffic.addPed();
+  const beachPeds = [[306, -18], [312, 6], [300, 28], [316, -38], [292, 28], [300, -8], [288, 52]];
+  const walkPeds = [[229, 28], [229, 52]];
   g.traffic.peds.forEach((ped, i) => {
-    if (i < beachPeds.length) {
-      ped.x = beachPeds[i][0];
-      ped.z = beachPeds[i][1];
+    const spot = i < beachPeds.length ? beachPeds[i] : walkPeds[i - beachPeds.length];
+    if (spot) {
+      ped.x = spot[0];
+      ped.z = spot[1];
       ped.mesh.position.set(ped.x, 0, ped.z);
     }
   });
   g.missions.start(6);
   g.missions.active.stage = 1;
   g.missions.say('Mara', "Salazar's convoy is making for the pier! Ram it before it reaches the water!", 999);
-  g.cameraPose = { pos: [240, 6, 84], look: [240, 1.4, 0] };
+  // Chase camera tight behind the car, off the west edge of the avenue:
+  // the Veloce fills the lower centre, the convoy and the interceptors
+  // stay in frame up the road, the beach and palms on the right.
+  g.cameraPose = { pos: [237, 3.6, 72], look: [240, 1.2, 28] };
   g.hud.showScreen('play');
   return { screen: 'play' };
 }
@@ -104,25 +114,29 @@ function stageCombat(g) {
   g.police.setStars(2);
   g.police.clearAll();
   g.police.spawnFootCop(-148, 152);
+  // The patrol car is ahead in the aisle, not behind the camera.
   const pc = g.police.spawnCarNear(-160, 160);
-  pc.x = -160; pc.z = 185; pc.heading = Math.PI;
+  pc.x = -150; pc.z = 138; pc.heading = Math.PI + 0.3;
   pc.mesh.position.set(pc.x, 0, pc.z);
   pc.mesh.rotation.y = pc.heading;
   g.combat.clear();
-  const e1 = g.combat.spawnEnemy(-156, 148, 'vulture');
-  const e2 = g.combat.spawnEnemy(-164, 128, 'vulture');
-  const e3 = g.combat.spawnEnemy(-156, 138, 'vulture');
+  // Both live enemies close down the aisle, in the line of fire.
+  const e1 = g.combat.spawnEnemy(-157, 152, 'vulture');
+  const e2 = g.combat.spawnEnemy(-162, 147, 'vulture');
+  // The one already down, lying open in the aisle where the tracer points.
+  const e3 = g.combat.spawnEnemy(-159, 149, 'vulture');
   e3.dead = true;
   e3.mesh.rotation.x = -Math.PI / 2;
   e3.mesh.position.y = 0.35;
   // A tracer from Rio's pistol toward the aisle.
   g.combat.addTracer(
     { x: g.player.x, y: 1.4, z: g.player.z },
-    { x: -156, y: 1.2, z: 148 },
+    { x: -157, y: 1.2, z: 152 },
   );
   g.traffic.clear();
   for (let i = 0; i < 8; i += 1) g.traffic.addPed();
-  const marketPeds = [[-168, 148], [-152, 132], [-166, 112], [-154, 168], [-170, 156], [-150, 108], [-164, 96], [-156, 164]];
+  // Market-goers crowded into the aisle the camera sees, clear of the stalls.
+  const marketPeds = [[-168, 146], [-152, 136], [-166, 152], [-154, 158], [-170, 138], [-150, 150], [-164, 142], [-156, 156]];
   g.traffic.peds.forEach((ped, i) => {
     if (i < marketPeds.length) {
       ped.x = marketPeds[i][0];
@@ -134,7 +148,9 @@ function stageCombat(g) {
   g.missions.active.stage = 1;
   g.missions.say('Nia', 'Two down the left aisle! I have got the stall side, Rio.', 999);
   g.missions.gainStanding('sunset', 16);
-  g.cameraPose = { pos: [-160, 2.2, 170], look: [-160, 1.3, 135] };
+  // Close over-shoulder camera: Rio big in the lower centre-left, the
+  // aisle, the enemies and the tracer ahead, the crosshair on the fight.
+  g.cameraPose = { pos: [-158, 2.0, 166], look: [-161, 1.25, 146] };
   g.hud.showScreen('play');
   return { screen: 'play' };
 }

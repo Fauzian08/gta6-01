@@ -206,8 +206,11 @@ export class World {
     // Night-market stalls along the Sunset Strip (x=-160 street, z 100..180):
     // a counter, a striped awning and a crate of goods each.
     const stallWood = new THREE.MeshLambertMaterial({ color: 0x8a6b4f });
-    const stripeA = new THREE.MeshLambertMaterial({ color: 0xe2547a });
-    const stripeB = new THREE.MeshLambertMaterial({ color: 0xf2ead8 });
+    // Awnings are unlit: the stripes stay bright after dark, so the market
+    // reads as lit stalls instead of black boxes at night.
+    const stripeA = new THREE.MeshBasicMaterial({ color: 0xe2547a });
+    const stripeB = new THREE.MeshBasicMaterial({ color: 0xf2ead8 });
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
     const stallSpots = [[-170, 112], [-150, 132], [-170, 152], [-150, 172], [-170, 96], [-150, 112]];
     for (const [sx, sz] of stallSpots) {
       const stall = new THREE.Group();
@@ -229,6 +232,10 @@ export class World {
       const goods = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.4, 0.9), new THREE.MeshLambertMaterial({ color: pick(rng, [0xffc233, 0x7fb069, 0xe2547a, 0x5b8fd9]) }));
       goods.position.y = 1.2;
       stall.add(goods);
+      // A warm bulb over the counter: one more market light, no extra lights.
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), bulbMat);
+      bulb.position.set(0, 2.6, 0);
+      stall.add(bulb);
       stall.position.set(sx, 0, sz);
       stall.rotation.y = sx < -160 ? 0 : Math.PI;
       scene.add(stall);
@@ -254,15 +261,15 @@ export class World {
       this.sun.position.set(-260, 90, 140);
       this.sun.color.set(0xff9a4d);
       this.sun.intensity = 1.5;
-      this.hemi.intensity = 0.75;
+      this.hemi.intensity = 0.85;
       for (const l of this.lamps) l.material.color.set(0xffd27a);
     } else {
       scene.background = new THREE.Color(0x141a2e);
       scene.fog = new THREE.Fog(0x141a2e, 200, 700);
       this.sun.position.set(60, 200, -80);
       this.sun.color.set(0x8fa8ff);
-      this.sun.intensity = 0.45;
-      this.hemi.intensity = 0.4;
+      this.sun.intensity = 0.6;
+      this.hemi.intensity = 0.55;
       for (const l of this.lamps) l.material.color.set(0xfff2b0);
     }
   }

@@ -26,8 +26,9 @@ export class Minimap {
     const beach = this.toMap(CITY.half - 30, 0);
     ctx.fillStyle = '#c9b183';
     ctx.fillRect(beach.x, 0, s - beach.x, s);
-    // City ground
-    ctx.fillStyle = '#3a3f47';
+    // City ground: lifted lighter than the old near-black, so the map reads
+    // at a glance in the HUD corner instead of sinking into the panel.
+    ctx.fillStyle = '#5a5f68';
     const tl = this.toMap(-CITY.half, -CITY.half);
     const br = this.toMap(CITY.half, CITY.half);
     ctx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
@@ -40,7 +41,7 @@ export class Minimap {
       ctx.fill();
     }
     // Streets
-    ctx.strokeStyle = '#20242b';
+    ctx.strokeStyle = '#33373e';
     ctx.lineWidth = 2;
     const cell = CITY.block;
     for (let i = 0; i <= CITY.blocks; i += 1) {

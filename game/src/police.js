@@ -7,7 +7,9 @@ import { WANTED, CAR_MODELS } from './config.js';
 import { range, intRange, pick } from './random.js';
 import { Car } from './vehicles.js';
 
-const POLICE_MODEL = { name: 'AZPD INTERCEPTOR', color: 0x1c1f26, top: 50, accel: 30 };
+// White interceptors: they read against dark asphalt at sunset and night,
+// where the old near-black paint vanished into the road.
+const POLICE_MODEL = { name: 'AZPD INTERCEPTOR', color: 0xe8e9eb, top: 50, accel: 30 };
 const CHATTER = [
   'All units, suspect heading east on Strand Boulevard.',
   'KITE-1 has eyes on the suspect vehicle.',
